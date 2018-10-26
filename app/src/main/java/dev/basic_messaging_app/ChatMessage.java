@@ -1,3 +1,5 @@
+package dev.basic_messaging_app;
+
 import java.util.Date;
 
 public class ChatMessage {
