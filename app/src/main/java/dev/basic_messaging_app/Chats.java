@@ -1,5 +1,4 @@
 package dev.basic_messaging_app;
-
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -85,6 +84,7 @@ public class Chats extends AppCompatActivity {
                 .orderByKey();
 
         FirebaseListOptions<ChatMessage> options = new FirebaseListOptions.Builder<ChatMessage>()
+                .setLayout(R.layout.activity_chats)
                 .setQuery(query, ChatMessage.class)
                 .build();
 
