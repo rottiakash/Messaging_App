@@ -24,12 +24,12 @@ import com.google.firebase.database.Query;
 public class Chats extends AppCompatActivity {
 
     private static final int SIGN_IN_REQUEST_CODE = 1;
-
+    private ListView listOfMessages;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chats);
-
+        listOfMessages = findViewById(R.id.list_of_messages);
         if(FirebaseAuth.getInstance().getCurrentUser() == null) {
             // Start sign in/sign up activity
             startActivityForResult(
@@ -78,7 +78,6 @@ public class Chats extends AppCompatActivity {
     }
     private void displayChatMessages()
     {
-       ListView listOfMessages = (ListView)findViewById(R.id.list_of_messages);
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
                 .orderByKey();
@@ -87,7 +86,7 @@ public class Chats extends AppCompatActivity {
                 .setLayout(R.layout.activity_chats)
                 .setQuery(query, ChatMessage.class)
                 .build();
-
+        System.out.println("options:"+options.getSnapshots().isEmpty());
         FirebaseListAdapter<ChatMessage> adapter = new FirebaseListAdapter<ChatMessage>(options) {
             @Override
             protected void populateView(View v, ChatMessage model, int position) {
