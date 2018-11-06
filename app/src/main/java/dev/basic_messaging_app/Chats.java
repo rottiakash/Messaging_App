@@ -3,10 +3,15 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.format.DateFormat;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -15,22 +20,29 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
 
 public class Chats extends AppCompatActivity {
 
+
+    private static final String TAG = "MainActivity";
     private static final int SIGN_IN_REQUEST_CODE = 1;
-    private ListView listOfMessages;
-    @Override
+       @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chats);
-        listOfMessages = findViewById(R.id.list_of_messages);
-        if(FirebaseAuth.getInstance().getCurrentUser() == null) {
+               if(FirebaseAuth.getInstance().getCurrentUser() == null) {
             // Start sign in/sign up activity
             startActivityForResult(
                     AuthUI.getInstance()
@@ -78,33 +90,45 @@ public class Chats extends AppCompatActivity {
     }
     private void displayChatMessages()
     {
-        Query query = FirebaseDatabase.getInstance()
-                .getReference()
-                .orderByKey();
-
-        FirebaseListOptions<ChatMessage> options = new FirebaseListOptions.Builder<ChatMessage>()
-                .setLayout(R.layout.activity_chats)
-                .setQuery(query, ChatMessage.class)
-                .build();
-        System.out.println("options:"+options.getSnapshots().isEmpty());
-        FirebaseListAdapter<ChatMessage> adapter = new FirebaseListAdapter<ChatMessage>(options) {
+        RecyclerView.LayoutManager manager=new RecyclerView.LayoutManager() {
             @Override
-            protected void populateView(View v, ChatMessage model, int position) {
-                // Bind the Chat to the view
-                TextView messageText = (TextView)v.findViewById(R.id.message_text);
-                TextView messageUser = (TextView)v.findViewById(R.id.message_user);
-                TextView messageTime = (TextView)v.findViewById(R.id.message_time);
-
-                // Set their text
-                messageText.setText(model.getMessageText());
-                messageUser.setText(model.getMessageUser());
-
-                // Format the date before showing it
-                messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
-                        model.getMessageTime()));
+            public RecyclerView.LayoutParams generateDefaultLayoutParams() {
+                return null;
             }
         };
-        listOfMessages.setAdapter(adapter);
+        RecyclerView RW=(RecyclerView)findViewById(R.id.rw);
+        RW.setLayoutManager(manager);
+        Query query = FirebaseDatabase.getInstance()
+                .getReference()
+                .child("chats")
+                .limitToLast(50);
+        FirebaseRecyclerOptions<ChatMessage> options =
+                new FirebaseRecyclerOptions.Builder<ChatMessage>()
+                        .setQuery(query, ChatMessage.class)
+                        .build();
+        FirebaseRecyclerAdapter adapter = new FirebaseRecyclerAdapter<ChatMessage, ViewHolder>(options) {
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                // Create a new instance of the ViewHolder, in this case we are using a custom
+                // layout called R.layout.message for each item
+                View view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.message, parent, false);
+
+                return new ViewHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(ViewHolder holder, int position, ChatMessage model) {
+                // Bind the Chat object to the ChatHolder
+                // ...
+                holder.messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
+                        model.getMessageTime()));
+                holder.messageText.setText(model.getMessageText());
+                holder.messageUser.setText(model.getMessageUser());
+            }
+        };
+        RW.setAdapter(adapter);
+
     }
 
     @Override
@@ -138,6 +162,7 @@ public class Chats extends AppCompatActivity {
         EditText input=(EditText) findViewById(R.id.editText);
         FirebaseDatabase.getInstance()
                 .getReference()
+                .child("chats")
                 .push()
                 .setValue(new ChatMessage(input.getText().toString(),
                         FirebaseAuth.getInstance()
