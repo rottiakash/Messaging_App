@@ -96,7 +96,7 @@ public class Chats extends AppCompatActivity {
                 return null;
             }
         };
-        RecyclerView RW=(RecyclerView)findViewById(R.id.rw);
+        RecyclerView RW=findViewById(R.id.rw);
         RW.setLayoutManager(manager);
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
