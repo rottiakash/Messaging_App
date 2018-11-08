@@ -106,6 +106,7 @@ public class Chats extends AppCompatActivity {
                 new FirebaseRecyclerOptions.Builder<ChatMessage>()
                         .setQuery(query, ChatMessage.class)
                         .build();
+        System.out.println("options:"+options.getSnapshots().isEmpty());
         FirebaseRecyclerAdapter adapter = new FirebaseRecyclerAdapter<ChatMessage, ViewHolder>(options) {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -128,7 +129,22 @@ public class Chats extends AppCompatActivity {
             }
         };
         RW.setAdapter(adapter);
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference ref = database.getReference().child("chats");
 
+// Attach a listener to read the data at our posts reference
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ChatMessage post = dataSnapshot.getValue(ChatMessage.class);
+                System.out.println("post:"+post.getMessageUser());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
     }
 
     @Override
