@@ -99,8 +99,7 @@ public class Chats extends AppCompatActivity {
         RecyclerView RW=findViewById(R.id.rw);
         RW.setLayoutManager(manager);
         Query query = FirebaseDatabase.getInstance()
-                .getReference()
-                .child("chats")
+                .getReference("/chats")
                 .limitToLast(50);
         FirebaseRecyclerOptions<ChatMessage> options =
                 new FirebaseRecyclerOptions.Builder<ChatMessage>()
@@ -130,14 +129,14 @@ public class Chats extends AppCompatActivity {
         };
         RW.setAdapter(adapter);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ref = database.getReference().child("chats");
+        DatabaseReference ref = database.getReference("/chats/-LQo8tTY2P2r8rrHUMkq");
 
 // Attach a listener to read the data at our posts reference
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ChatMessage post = dataSnapshot.getValue(ChatMessage.class);
-                System.out.println("post:"+post.getMessageUser());
+                System.out.println("post:"+post.getMessageText());
             }
 
             @Override
