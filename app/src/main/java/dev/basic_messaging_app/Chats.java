@@ -25,6 +25,7 @@ public class Chats extends AppCompatActivity {
 
     private static final int SIGN_IN_REQUEST_CODE = 1;
     private ListView listOfMessages;
+    FirebaseListAdapter adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,33 +79,41 @@ public class Chats extends AppCompatActivity {
     }
     private void displayChatMessages()
     {
+        listOfMessages=findViewById(R.id.list_of_messages);
         Query query = FirebaseDatabase.getInstance()
-                .getReference()
-                .orderByKey();
+                .getReference().child("chats");
 
         FirebaseListOptions<ChatMessage> options = new FirebaseListOptions.Builder<ChatMessage>()
-                .setLayout(R.layout.activity_chats)
+                .setLayout(R.layout.message)
                 .setQuery(query, ChatMessage.class)
                 .build();
-        System.out.println("options:"+options.getSnapshots().isEmpty());
-        FirebaseListAdapter<ChatMessage> adapter = new FirebaseListAdapter<ChatMessage>(options) {
+        adapter=new FirebaseListAdapter(options) {
             @Override
-            protected void populateView(View v, ChatMessage model, int position) {
-                // Bind the Chat to the view
-                TextView messageText = (TextView)v.findViewById(R.id.message_text);
-                TextView messageUser = (TextView)v.findViewById(R.id.message_user);
-                TextView messageTime = (TextView)v.findViewById(R.id.message_time);
-
-                // Set their text
-                messageText.setText(model.getMessageText());
-                messageUser.setText(model.getMessageUser());
-
-                // Format the date before showing it
-                messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
-                        model.getMessageTime()));
+            protected void populateView(@NonNull View v, @NonNull Object model, int position) {
+               TextView user=v.findViewById(R.id.message_user);
+               TextView message=v.findViewById(R.id.message_text);
+               TextView time=v.findViewById(R.id.message_time);
+               ChatMessage chatMessage=(ChatMessage) model;
+               System.out.println(chatMessage.getMessageText().toString());
+               user.setText("Username:- "+chatMessage.getMessageUser().toString());
+               message.setText("Message:-"+chatMessage.getMessageText().toString());
+               time.setText("Date:-"+DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
+                       chatMessage.getMessageTime()));
             }
         };
         listOfMessages.setAdapter(adapter);
+
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        adapter.startListening();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.stopListening();
     }
 
     @Override
@@ -137,7 +146,7 @@ public class Chats extends AppCompatActivity {
     {
         EditText input=(EditText) findViewById(R.id.editText);
         FirebaseDatabase.getInstance()
-                .getReference()
+                .getReference().child("chats")
                 .push()
                 .setValue(new ChatMessage(input.getText().toString(),
                         FirebaseAuth.getInstance()
